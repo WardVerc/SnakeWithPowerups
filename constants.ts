@@ -7,3 +7,7 @@ export const SCREEN = {
   WIDTH: windowWidth,
   HEIGHT: windowHeight,
 };
+
+export const SNAKE = {
+  WIDTH: 20,
+};
