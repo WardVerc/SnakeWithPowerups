@@ -10,4 +10,9 @@ export const SCREEN = {
 
 export const SNAKE = {
   WIDTH: 20,
+  START_POSITION: [
+    [100, 100],
+    [120, 100],
+  ],
+  FOOD_START_POSITION: [160, 300],
 };

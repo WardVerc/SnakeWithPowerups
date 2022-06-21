@@ -8,14 +8,20 @@ import { SCREEN } from "./constants";
 
 export default function App() {
   const [direction, setDirection] = useState("right");
+  const [score, setScore] = useState(0);
 
   return (
     <View style={styles.container}>
       <View style={[styles.rowContainer, styles.headerContainer]}>
-        <Header direction={direction} />
+        <Header direction={direction} score={score} />
       </View>
       <View style={[styles.rowContainer, styles.gameContainer]}>
-        <SnakeGame direction={direction} />
+        <SnakeGame
+          direction={direction}
+          setDirection={setDirection}
+          score={score}
+          setScore={setScore}
+        />
       </View>
       <View style={[styles.rowContainer, styles.controlsContainer]}>
         <Controls direction={direction} setDirection={setDirection} />
