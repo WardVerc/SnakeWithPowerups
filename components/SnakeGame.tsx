@@ -21,7 +21,12 @@ const SnakeGame: FC<SnakeGameProps> = ({
   const [menuOpen, setMenuOpen] = useState(true);
   const [currentHeight, setCurrentHeight] = useState(400);
   const [snake, setSnake] = useState(SNAKE.START_POSITION);
+  const [foodSize, setFoodSize] = useState(SNAKE.WIDTH);
+  const [speed, setSpeed] = useState(SNAKE.SPEED);
   const [foodLocation, setFoodLocation] = useState(SNAKE.FOOD_START_POSITION);
+  const [powerupLocation, setPowerupLocation] = useState(
+    SNAKE.POWERUP_START_POSITION
+  );
   let snakeInterval: string | number | NodeJS.Timer | undefined;
 
   const handleLayout = (event: LayoutChangeEvent) => {
@@ -62,6 +67,25 @@ const SnakeGame: FC<SnakeGameProps> = ({
     setFoodLocation([x, y]);
   };
 
+  const powerups = [
+    function () {
+      setFoodSize(SNAKE.WIDTH * 2);
+    },
+    function () {
+      setSpeed(30);
+    },
+  ];
+
+  const activatePowerup = () => {
+    setScore(score + 1);
+    if (score === 5) {
+      powerups[0]();
+    }
+    if (score === 10) {
+      powerups[1]();
+    }
+  };
+
   useEffect(() => {
     if (!menuOpen && !gameOver) {
       snakeInterval = setInterval(() => {
@@ -81,17 +105,42 @@ const SnakeGame: FC<SnakeGameProps> = ({
         snakey.push(head);
 
         //check eat food
-        if (head[0] === foodLocation[0] && head[1] === foodLocation[1]) {
+        const isSnakeInFoodSmall =
+          head[0] === foodLocation[0] && head[1] === foodLocation[1];
+        const isSnakeInFoodBigxy =
+          foodSize === SNAKE.WIDTH * 2 &&
+          head[0] === foodLocation[0] + SNAKE.WIDTH &&
+          head[1] === foodLocation[1] + SNAKE.WIDTH;
+        const isSnakeInFoodBigx =
+          foodSize === SNAKE.WIDTH * 2 &&
+          head[0] === foodLocation[0] + SNAKE.WIDTH &&
+          head[1] === foodLocation[1];
+        const isSnakeInFoodBigy =
+          foodSize === SNAKE.WIDTH * 2 &&
+          head[0] === foodLocation[0] &&
+          head[1] === foodLocation[1] + SNAKE.WIDTH;
+
+        if (
+          isSnakeInFoodSmall ||
+          isSnakeInFoodBigxy ||
+          isSnakeInFoodBigx ||
+          isSnakeInFoodBigy
+        ) {
           snakey.unshift([head[0], head[1] + SNAKE.WIDTH]);
           randomizeFoodLocation();
           setScore(score + 1);
+        }
+
+        //check eat powerup
+        if (head[0] === powerupLocation[0] && head[1] === powerupLocation[1]) {
+          activatePowerup();
         }
 
         checkCollisions();
 
         snakey.shift();
         setSnake(snakey);
-      }, 100);
+      }, speed);
       return () => {
         clearInterval(snakeInterval);
       };
@@ -103,13 +152,15 @@ const SnakeGame: FC<SnakeGameProps> = ({
     setFoodLocation(SNAKE.FOOD_START_POSITION);
     setDirection("right");
     setScore(0);
+    setSpeed(SNAKE.SPEED);
+    setFoodSize(SNAKE.WIDTH);
   };
 
   const handleMenuClose = () => {
     setMenuOpen(false);
   };
 
-  const handleDialogClose = () => {
+  const handleGameOverClose = () => {
     resetGame();
     setGameOver(false);
   };
@@ -123,8 +174,9 @@ const SnakeGame: FC<SnakeGameProps> = ({
       </Dialog.Container>
       <Dialog.Container visible={gameOver}>
         <Dialog.Title>Game over</Dialog.Title>
+        <Dialog.Description>Your score was: {score}</Dialog.Description>
         <Dialog.Description>Play again?</Dialog.Description>
-        <Dialog.Button label="Play" onPress={handleDialogClose} />
+        <Dialog.Button label="Play" onPress={handleGameOverClose} />
       </Dialog.Container>
       {snake.map((bodyPart, idx) => {
         return (
@@ -138,8 +190,20 @@ const SnakeGame: FC<SnakeGameProps> = ({
         );
       })}
       <View
-        style={[styles.food, { left: foodLocation[0], top: foodLocation[1] }]}
+        style={[
+          styles.food,
+          { left: foodLocation[0], top: foodLocation[1] },
+          { width: foodSize, height: foodSize },
+        ]}
       />
+      {score % 5 === 0 ? (
+        <View
+          style={[
+            styles.powerup,
+            { left: powerupLocation[0], top: powerupLocation[1] },
+          ]}
+        ></View>
+      ) : null}
     </View>
   );
 };
@@ -163,6 +227,12 @@ const styles = StyleSheet.create({
   food: {
     position: "absolute",
     backgroundColor: "red",
+    borderStyle: "solid",
+    borderWidth: 2,
+  },
+  powerup: {
+    position: "absolute",
+    backgroundColor: "cyan",
     borderStyle: "solid",
     borderWidth: 2,
     width: SNAKE.WIDTH,
