@@ -15,4 +15,6 @@ export const SNAKE = {
     [120, 100],
   ],
   FOOD_START_POSITION: [160, 300],
+  POWERUP_START_POSITION: [300, 100],
+  SPEED: 100,
 };

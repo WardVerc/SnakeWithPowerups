@@ -10,8 +10,6 @@ interface HeaderProps {
 const Header: FC<HeaderProps> = ({ direction, score }) => {
   return (
     <>
-      <Text>Header</Text>
-      <Text>Direction: {direction}</Text>
       <Text>Score: {score}</Text>
     </>
   );
