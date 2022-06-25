@@ -27,6 +27,7 @@ const SnakeGame: FC<SnakeGameProps> = ({
   const [powerupLocation, setPowerupLocation] = useState(
     SNAKE.POWERUP_START_POSITION
   );
+  const isPowerUpAvailable = score % 5 === 0 && score !== 0;
   let snakeInterval: string | number | NodeJS.Timer | undefined;
 
   const handleLayout = (event: LayoutChangeEvent) => {
@@ -56,7 +57,7 @@ const SnakeGame: FC<SnakeGameProps> = ({
     });
   };
 
-  const randomizeFoodLocation = () => {
+  const randomizeLocation = () => {
     let maxw = SCREEN.WIDTH - SNAKE.WIDTH;
     let randomw = Math.random() * maxw;
     let maxh = currentHeight - SNAKE.WIDTH;
@@ -64,25 +65,54 @@ const SnakeGame: FC<SnakeGameProps> = ({
     let x = Math.floor(randomw / SNAKE.WIDTH) * SNAKE.WIDTH;
     let y = Math.floor(randomh / SNAKE.WIDTH) * SNAKE.WIDTH;
 
-    setFoodLocation([x, y]);
+    return [x, y];
   };
 
   const powerups = [
     function () {
       setFoodSize(SNAKE.WIDTH * 2);
+      setTimeout(() => {
+        setFoodSize(SNAKE.WIDTH);
+      }, 10000);
     },
     function () {
-      setSpeed(30);
+      setSpeed(20);
+      setTimeout(() => {
+        setSpeed(SNAKE.SPEED);
+      }, 10000);
     },
+    // function () {
+    //   // no boundaries (if head[0] > SCREEN.WIDTH -> head[0] === 0)
+    // },
   ];
+
+  const randomIntFromInterval = (min: number, max: number) => {
+    // min and max included
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  };
 
   const activatePowerup = () => {
     setScore(score + 1);
-    if (score === 5) {
-      powerups[0]();
-    }
-    if (score === 10) {
-      powerups[1]();
+    // save this random int to keep track of which powerups are activated already (use state, remember to reset after gameover)
+    // this powerup cannot be chosen again, should be out of the list -> copy array of powerups,
+    // use state (array of ints) and remove those powerups from copied array here
+    // use length of the local array instead of global powerups array
+    // if length of local array > 0
+    powerups[randomIntFromInterval(0, powerups.length - 1)]();
+
+    setPowerupLocation(randomizeLocation);
+  };
+
+  const checkPowerup = () => {
+    let snakey = [...snake];
+    let head = snakey[snakey.length - 1];
+
+    if (
+      isPowerUpAvailable &&
+      head[0] === powerupLocation[0] &&
+      head[1] === powerupLocation[1]
+    ) {
+      activatePowerup();
     }
   };
 
@@ -104,7 +134,6 @@ const SnakeGame: FC<SnakeGameProps> = ({
 
         snakey.push(head);
 
-        //check eat food
         const isSnakeInFoodSmall =
           head[0] === foodLocation[0] && head[1] === foodLocation[1];
         const isSnakeInFoodBigxy =
@@ -127,16 +156,12 @@ const SnakeGame: FC<SnakeGameProps> = ({
           isSnakeInFoodBigy
         ) {
           snakey.unshift([head[0], head[1] + SNAKE.WIDTH]);
-          randomizeFoodLocation();
+          setFoodLocation(randomizeLocation);
           setScore(score + 1);
         }
 
-        //check eat powerup
-        if (head[0] === powerupLocation[0] && head[1] === powerupLocation[1]) {
-          activatePowerup();
-        }
-
         checkCollisions();
+        checkPowerup();
 
         snakey.shift();
         setSnake(snakey);
@@ -196,7 +221,7 @@ const SnakeGame: FC<SnakeGameProps> = ({
           { width: foodSize, height: foodSize },
         ]}
       />
-      {score % 5 === 0 ? (
+      {isPowerUpAvailable ? (
         <View
           style={[
             styles.powerup,
